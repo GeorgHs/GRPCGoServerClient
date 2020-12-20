@@ -6,13 +6,17 @@ import (
 	"log"
 	"net"
 
-	"github.com/simplesteph/grpc-go-course/greet/greetpb"
+	"greet/greetpb"
+
 	"google.golang.org/grpc"
 )
 
 type server struct{}
 
+func (*server) GreetEveryone(greetpb.GreetService_GreetEveryoneServer) {}
+
 func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+	fmt.Printf("Greet function was invoked with %v", req)
 	firstName := req.GetGreeting().GetFirstName()
 	result := "Hello" + firstName
 	res := &greetpb.GreetResponse{
@@ -30,6 +34,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
+	greetpb.RegisterGreetServiceServer(s, &server{})
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
