@@ -6,14 +6,12 @@ import (
 	"log"
 	"net"
 
-	"greet/greetpb"
+	"github.com/GeorgHs/GoServer/ServerClient/greet/greetpb"
 
 	"google.golang.org/grpc"
 )
 
 type server struct{}
-
-func (*server) GreetEveryone(greetpb.GreetService_GreetEveryoneServer) {}
 
 func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
 	fmt.Printf("Greet function was invoked with %v", req)
