@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
+	"time"
 
-	"github.com/GeorgHs/GoServer/ServerStreaming/greet/greetpb"
+	"github.com/GeorgHs/GoServer/ClientStreaming/greet/greetpb"
 
 	"google.golang.org/grpc"
 )
@@ -24,7 +24,7 @@ func main() {
 
 	//doUnary(c)
 	//c.Greet(context.Background(), in*greetpb.GreetRequest)
-	doServerStreaming(c)
+	doClientStreaming(c)
 }
 
 func doUnary(c greetpb.GreetServiceClient) {
@@ -44,28 +44,51 @@ func doUnary(c greetpb.GreetServiceClient) {
 	log.Printf("Response from Greet: %v", res.Result)
 }
 
-func doServerStreaming(c greetpb.GreetServiceClient) {
-	fmt.Println("Starting to do a Server Streaming RPC...")
+func doClientStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a Client Streaming RPC...")
 
-	req := &greetpb.GreetManyTimesRequest{
-		Greeting: &greetpb.Greeting{
-			FirstName: "Stephane",
-			LastName:  "Maarek",
+	requests := []*greetpb.LongGreetRequest{
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Stephane",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "John",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Lucy",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Mark",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Piper",
+			},
 		},
 	}
-	resStream, err := c.GreetManyTimes(context.Background(), req)
+
+	stream, err := c.LongGreet(context.Background())
 	if err != nil {
-		log.Fatalf("error wile calling GreetmanyTimes RPC: %v", err)
+		log.Fatalf("error while calling LongGreet: %v", err)
 	}
-	for {
-		msg, err := resStream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-			log.Fatalf("error while reading stream %v", err)
-		}
-		log.Printf("Response from GreetManyTimes: %v", msg.GetResult())
+	// we iterate over our slice and send each message individually
+	for _, req := range requests {
+		fmt.Printf("Sending req: %v\n", req)
+		stream.Send(req)
+		time.Sleep(1000 * time.Millisecond)
 	}
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving response from LongGreet: %v", err)
+	}
+	fmt.Printf("LongGreet Response %v\n", res)
+
 }
