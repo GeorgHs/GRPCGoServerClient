@@ -13,6 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var collection *mongo.Collection
@@ -27,10 +29,46 @@ type blogItem struct {
 	Title    string             `bson:"title"`
 }
 
+func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
+	fmt.Println("Create blog request")
+	blog := req.GetBlog()
+
+	data := blogItem{
+		AuthorID: blog.GetAuthorId(),
+		Title:    blog.GetTitle(),
+		Content:  blog.GetContent(),
+	}
+
+	res, err := collection.InsertOne(context.Background(), data)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal error: %v", err),
+		)
+	}
+	oid, ok := res.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Cannot convert to OID"),
+		)
+	}
+
+	return &blogpb.CreateBlogResponse{
+		Blog: &blogpb.Blog{
+			Id:       oid.Hex(),
+			AuthorId: blog.GetAuthorId(),
+			Title:    blog.GetTitle(),
+			Content:  blog.GetContent(),
+		},
+	}, nil
+
+}
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	fmt.Println("Blog Service started")
+	fmt.Println("Connecting to MongoDB")
 
 	//connect to MongoDB
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -42,6 +80,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Println("Blog Service Started")
 	collection = client.Database("mydb").Collection("blog")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
