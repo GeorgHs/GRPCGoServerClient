@@ -101,7 +101,7 @@ go get
 * wie üblich
 
 ==== in entsprechendem Ordner anlegen
-* C:\Users\hertzg\Documents\GitHub\GoServer\GoServer
+* C:\Users\...\Documents\GitHub\GoServer\GoServer
 * greet
 ** greet\greetpb\
 ** greet\greetpb\greet.proto
@@ -121,7 +121,7 @@ service GreetService{}
 === dann mit protoc umkonvertieren
 
 * zuerst in den richtigen Ordner gehen
-* C:\Users\hertzg\Documents\GitHub\GoServer\GoServer\greet\greetpb
+* C:\Users\...\Documents\GitHub\GoServer\GoServer\greet\greetpb
 
 ==== Server Boilerplate Code aufsetzen
 
@@ -701,7 +701,7 @@ func main() {
 
 .Output von Client sollte am Ende so aussehen:
 ----
-C:\Users\hertzg\go\src\github.com\GeorgHs\GoServer\ServerStreaming\greet\greet_client>go run client.go
+C:\Users\...\go\src\github.com\GeorgHs\GoServer\ServerStreaming\greet\greet_client>go run client.go
 Hello I am a client
 Starting to do a Server Streaming RPC...
 2020/12/21 11:33:32 Response from GreetManyTimes: HelloStephane number0
