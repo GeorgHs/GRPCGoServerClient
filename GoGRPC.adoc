@@ -1,0 +1,2038 @@
+=== Go GRPC
+
+
+==== Installation
+
+This course assumes you already know Golang. But in case you need to have the same setup as me, perform step 1, 2 & 3. Otherwise, just perform step 3.  
+
+1) Go Setup
+Instructions to install Golang are here: https://golang.org/doc/install
+
+Make sure that the go binaries are in your PATH  (see installation instructions), so that you can run the following command in a terminal:
+
+go version
+(returns: go version go1.10 darwin/amd64 or different version)
+
+
+2) VSCode Setup
+You are free to use a text editor of your choice, but in this course I will use VSCode.  It is not necessary to have the same text editor as me to complete the course. 
+
+=========== Instructions for VSCode ==========
+
+1. Install VSCode: https://code.visualstudio.com/
+
+2. Install VSCode extensions (https://code.visualstudio.com/docs/editor/extension-gallery#_browse-and-install-extensions):vscode-proto3  & Clang-Format  (if you want to format your files automatically)
+
+3. Install Clang-Format (if you want to format your files automatically):
+
+MacOSX: brew install clang-format 
+Windows / Ubuntu: See http://www.codepool.biz/vscode-format-c-code-windows-linux.html
+4. Install protoc (see below)
+
+
+
+3) Protoc Setup
+In order to perform code generation, you will need to install protoc  on your computer.
+
+============ MacOSX =============
+
+It is actually very easy, open a command line interface and type brew install protobuf 
+
+============ Ubuntu (Linux) ============
+
+Find the correct protocol buffers version based on your Linux Distro: https://github.com/google/protobuf/releases
+
+Example with x64:
+
+.Make sure you grab the latest version
+curl -OL https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-linux-x86_64.zip
+.Unzip
+unzip protoc-3.5.1-linux-x86_64.zip -d protoc3
+.Move protoc to /usr/local/bin/
+sudo mv protoc3/bin/* /usr/local/bin/
+.Move protoc3/include to /usr/local/include/
+sudo mv protoc3/include/* /usr/local/include/
+.Optional: change owner
+sudo chown [user] /usr/local/bin/protoc
+sudo chown -R [user] /usr/local/include/google
+============ Windows ============
+
+Download the windows archive: https://github.com/google/protobuf/releases
+
+Example: https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-win32.zip
+
+Extract all to C:\proto3  
+
+Your directory structure should now be
+
+C:\proto3\bin 
+
+C:\proto3\include 
+
+Finally, add C:\proto3\bin to your PATH:
+
+From the desktop, right-click My Computer and click Properties.
+In the System Properties window, click on the Advanced tab
+In the Advanced section, click the Environment Variables button.
+Finally, in the Environment Variables window (as shown below), highlight the Path variable in the Systems Variable section and click the Edit button. Add or modify the path lines with the paths you wish the computer to access. Each different directory is separated with a semicolon as shown below.
+
+C:\Program Files; C:\Winnt; ...... ; C:\proto3\bin
+(you need to add ; C:\proto3\bin  at the end)
+
+* gRPC-Go: The Go implementation of gRPC: A high performance, open source, general RPC frameowkr that puts mobile and HTTP/2 first. For more information see the gRPC Quick Start: Go Guide
+
+
+==== setup grpc
+
+github.com/grpc/grpc-go
+
+.install grpc und protoc-plugin
+----
+go get -u google.golang.org/grpc
+go get -u github.com/golang/protobuf/protoc-gen-go
+----
+
+.niemals!!!
+----
+go get 
+----
+
+==== dann den Ordner und github aufsetzen
+* wie üblich
+
+==== in entsprechendem Ordner anlegen
+* C:\Users\hertzg\Documents\GitHub\GoServer\GoServer
+* greet
+** greet\greetpb\
+** greet\greetpb\greet.proto
+
+greet.proto
+----
+syntax = "proto3";
+
+package greet;
+option go_package="greet/greetpb";
+
+service GreetService{}
+----
+
+* ist dabei greet.proto bei rausgekommen?
+
+=== dann mit protoc umkonvertieren
+
+* zuerst in den richtigen Ordner gehen
+* C:\Users\hertzg\Documents\GitHub\GoServer\GoServer\greet\greetpb
+
+==== Server Boilerplate Code aufsetzen
+
+.server.go
+----
+package main
+import (
+    "fmt"
+    "log"
+    "net"
+	
+    
+    "google.golang.org/grpc"
+)
+
+
+
+
+func main() {
+    fmt.Println("Hello world")
+    
+    lis, err := net.Listen("tcp", "0.0.0.0:50051")
+    if err != nil {
+        log.Fatalf("Failed")
+	}
+	
+	s := grpc.NewServer()
+
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+----
+
+* nach stundenlangem Hin- und Her: go run greet/greet_server/server.go bitte weglassen!
+
+==== Client Setup Boilerplate Code
+
+.Client
+----
+package main
+
+import (
+	"fmt"
+	"log"
+	"github.com/simplesteph/grpc-go-course/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v",err)
+	}
+	defer cc.Close()
+
+	c := greetpb.NewGreetServiceClient(cc)
+	fmt.Println("Created client: %f",c)
+}
+----
+
+* zuerst mit go run server.go den Server starten
+* dann per go rn client.go den Client starten
+
+
+* bei GitHub-Problemen: wenn der Benutzer gewechselt wurde! (beide Videos von Relevanz)
+https://www.youtube.com/watch?v=KnuaVfi5MFU
+https://www.youtube.com/watch?v=I03YCDBoCrU
+
+==== Unary API
+https://golang.org/doc/gopath_code.html
+
+.GoPath Problems (not finding library)
+----
+https://medium.com/learn-go/go-path-explained-cab31a0d90b9
+
+https://stackoverflow.com/questions/21001387/how-do-i-set-the-gopath-environment-variable-on-ubuntu-what-file-must-i-edit
+
+https://www.jetbrains.com/help/go/configuring-goroot-and-gopath.html
+
+"github.com/GeorgHs/GoServerClient/greet/greetpb"
+
+https://www.youtube.com/watch?v=VgNK1qY0d1I
+----
+
+* greet-server
+* make sure its running in %UserName%\go\src\github.com\GeorgHs... or DockerContainer (that assignes GOPATH it to that variable 
+* in order to let protoc-command run you will have to go to greet-level and execute protoc
+** protoc --go_out=plugins=grpc:. greet/greetpb/greet.proto
+
+.client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/GeorgHs/GoServer/ServerClient/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := greetpb.NewGreetServiceClient(cc)
+	//fmt.Println("Created client: %f",c)
+
+	doUnary(c)
+	//c.Greet(context.Background(), in*greetpb.GreetRequest)
+
+}
+
+func doUnary(c greetpb.GreetServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &greetpb.GreetRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Stephane",
+			LastName:  "Maarek",
+		},
+	}
+
+	res, err := c.Greet(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Greet RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.Result)
+}
+
+----
+
+.server.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+
+	"github.com/GeorgHs/GoServer/ServerClient/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+type server struct{}
+
+func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+	fmt.Printf("Greet function was invoked with %v", req)
+	firstName := req.GetGreeting().GetFirstName()
+	result := "Hello" + firstName
+	res := &greetpb.GreetResponse{
+		Result: result,
+	}
+	return res, nil
+}
+
+func main() {
+	fmt.Println("Hello world")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed")
+	}
+
+	s := grpc.NewServer()
+	greetpb.RegisterGreetServiceServer(s, &server{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+
+----
+
+.greetpb.proto
+----
+syntax = "proto3";
+
+package greet;
+option go_package="greet/greetpb";
+
+message Greeting {
+    string first_name = 1;
+    string last_name = 2;
+}
+
+message GreetRequest {
+    Greeting greeting = 1;
+}
+
+message GreetResponse {
+    string result = 1;
+}
+
+service GreetService {
+    rpc Greet(GreetRequest) returns (GreetResponse) {};
+}
+----
+
+
+
+===== now comes task: develop SUMApi: 2 numbers and sum comes out
+
+* create folder calculator
+** calculator_client
+*** client.go
+** calculator_server
+*** server.go
+** calculator
+*** calculator.pb.go
+*** calculator.proto
+
+* take old greet-server-code (client as well as server)
+* then modify server.go
+
+.server.go
+----
+fmt.Printf("Received Sum RPC: %v", req)
+	firstNumber := req.FirstNumber
+	secondNumber := req.SecondNumber
+	sum := firstNumber + secondNumber
+	res := &calculatorpb.SumResponse{
+		SumResult: sum,
+	}
+	return res, nil
+	
+...
+
+s := grpc.NewServer()
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+----
+
+* and register
+
+.grpc-Client
+----
+func doUnary(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &calculatorpb.SumRequest{
+		FirstNumber:  5,
+		SecondNumber: 40,
+	}
+
+	res, err := c.Sum(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Sum RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.SumResult)
+}
+----
+
+* full code:
+
+.server.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+
+	"github.com/GeorgHs/GoServer/ServerClient/calculator/calculatorpb"
+
+	"google.golang.org/grpc"
+)
+
+type server struct{}
+
+func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+	fmt.Printf("Received Sum RPC: %v", req)
+	firstNumber := req.FirstNumber
+	secondNumber := req.SecondNumber
+	sum := firstNumber + secondNumber
+	res := &calculatorpb.SumResponse{
+		SumResult: sum,
+	}
+	return res, nil
+}
+
+func main() {
+	fmt.Println("Calculator Server")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed")
+	}
+
+	s := grpc.NewServer()
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+
+----
+
+.client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/GeorgHs/GoServer/ServerClient/calculator/calculatorpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := calculatorpb.NewCalculatorServiceClient(cc)
+	//fmt.Println("Created client: %f",c)
+
+	doUnary(c)
+	//c.Greet(context.Background(), in*greetpb.GreetRequest)
+
+}
+
+func doUnary(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &calculatorpb.SumRequest{
+		FirstNumber:  5,
+		SecondNumber: 40,
+	}
+
+	res, err := c.Sum(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Sum RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.SumResult)
+}
+
+----
+
+.calculator.proto
+----
+syntax = "proto3";
+
+package calculator;
+option go_package = "calculatorpb";
+
+message SumRequest {
+    int32 first_number = 1;
+    int32 second_number = 2;
+}
+
+message SumResponse {
+    int32 sum_result = 1;
+}
+
+service CalculatorService {
+    rpc Sum(SumRequest) returns (SumResponse) {};
+}
+----
+
+==== Server Streaming API
+
+
+
+.server.go hinzufügen
+----
+func (*server) GreetManyTimes(req *GreetManyTimesRequest, stream GreetService_GreetManyTimesServer) error {
+	fmt.Printf("GreetManyTimes function was invoked with %v\n", req)
+	firstName := req.GetGreeting().GetFirstName()
+	for i := 0; i < 10; i++ {
+		result := "Hello" + firstName + " number" + strconv.Itoa(i)
+		res := &greetpb.GreetManyTimesResponse{
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(1000 * time.Millisecond)
+	}
+	return nil
+}
+----
+
+* in Client nun hinzufügen
+* //doUnary(c) -> ausklammern
+* doServerStreaming(c) -> implementieren
+
+.client.go hinzufügen
+----
+func doServerStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a Server Streaming RPC...")
+
+	req := &greetpb.GreetManyTimesRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Stephane",
+			LastName:  "Maarek",
+		},
+	}
+	resStream, err := c.GreetManyTimes(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error wile calling GreetmanyTimes RPC: %v", err)
+	}
+	for {
+		msg, err := resStream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+			log.Fatalf("error while reading stream %v", err)
+		}
+		log.Printf("Response from GreetManyTimes: %v", msg.GetResult())
+	}
+}
+----
+
+* sprich am Ende kommt dabei raus:
+
+.client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+
+	"github.com/GeorgHs/GoServer/ServerStreaming/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := greetpb.NewGreetServiceClient(cc)
+	//fmt.Println("Created client: %f",c)
+
+	//doUnary(c)
+	//c.Greet(context.Background(), in*greetpb.GreetRequest)
+	doServerStreaming(c)
+}
+
+func doUnary(c greetpb.GreetServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &greetpb.GreetRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Stephane",
+			LastName:  "Maarek",
+		},
+	}
+
+	res, err := c.Greet(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Greet RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.Result)
+}
+
+func doServerStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a Server Streaming RPC...")
+
+	req := &greetpb.GreetManyTimesRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Stephane",
+			LastName:  "Maarek",
+		},
+	}
+	resStream, err := c.GreetManyTimes(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error wile calling GreetmanyTimes RPC: %v", err)
+	}
+	for {
+		msg, err := resStream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+			log.Fatalf("error while reading stream %v", err)
+		}
+		log.Printf("Response from GreetManyTimes: %v", msg.GetResult())
+	}
+}
+----
+
+.server.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+	"strconv"
+	"time"
+
+	"github.com/GeorgHs/GoServer/ServerStreaming/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+type server struct{}
+
+func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+	fmt.Printf("Greet function was invoked with %v", req)
+	firstName := req.GetGreeting().GetFirstName()
+	result := "Hello" + firstName
+	res := &greetpb.GreetResponse{
+		Result: result,
+	}
+	return res, nil
+}
+
+func (*server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) error {
+	fmt.Printf("GreetManyTimes function was invoked with %v\n", req)
+	firstName := req.GetGreeting().GetFirstName()
+	for i := 0; i < 10; i++ {
+		result := "Hello" + firstName + " number" + strconv.Itoa(i)
+		res := &greetpb.GreetManyTimesResponse{
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(1000 * time.Millisecond)
+	}
+	return nil
+}
+
+func main() {
+	fmt.Println("Hello world")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed")
+	}
+
+	s := grpc.NewServer()
+	greetpb.RegisterGreetServiceServer(s, &server{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+
+----
+
+.Output von Client sollte am Ende so aussehen:
+----
+C:\Users\hertzg\go\src\github.com\GeorgHs\GoServer\ServerStreaming\greet\greet_client>go run client.go
+Hello I am a client
+Starting to do a Server Streaming RPC...
+2020/12/21 11:33:32 Response from GreetManyTimes: HelloStephane number0
+2020/12/21 11:33:33 Response from GreetManyTimes: HelloStephane number1
+2020/12/21 11:33:34 Response from GreetManyTimes: HelloStephane number2
+2020/12/21 11:33:35 Response from GreetManyTimes: HelloStephane number3
+2020/12/21 11:33:36 Response from GreetManyTimes: HelloStephane number4
+2020/12/21 11:33:37 Response from GreetManyTimes: HelloStephane number5
+2020/12/21 11:33:38 Response from GreetManyTimes: HelloStephane number6
+2020/12/21 11:33:39 Response from GreetManyTimes: HelloStephane number7
+2020/12/21 11:33:40 Response from GreetManyTimes: HelloStephane number8
+2020/12/21 11:33:41 Response from GreetManyTimes: HelloStephane number9
+----
+
+* diese wurde vom Server gesendet:
+----
+for i := 0; i < 10; i++ {
+		result := "Hello" + firstName + " number" + strconv.Itoa(i)
+		res := &greetpb.GreetManyTimesResponse{
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(1000 * time.Millisecond)
+	}
+----
+
+==== Primzahlen zerlegen
+
+* hierzu aus dem ServerClient-Beispiel die calculator nehmen!
+
+.server.go verändern
+----
+func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
+	fmt.Printf("Received PrimeNumberDecomposition RPC: %v\n", req)
+	number := req.GetNumber()
+	divisor := int64(2)
+
+	for number > 1 {
+		if number%divisor == 0 {
+			stream.Send(&calculatorpb.PrimeNumberDecompositionResponse{
+				PrimeFactor: divisor,
+			})
+			number = number / divisor
+		} else {
+			divisor++
+			fmt.Println("Divisor has increased to %v", divisor)
+		}
+	}
+	return nil
+}
+
+----
+
+* Du musst nichts in die main-Methode schreiben!
+
+.client.go verändern
+----
+func doServerStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a PrimeDecomposition Server Streaming RPC")
+	req := &calculatorpb.PrimeNumberDecompositionRequest{
+		Number: 12,
+	}
+
+	stream, err := c.PrimeNumberDecomposition(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling PrimeDecomposition RPC: %v", err)
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("format string", err)
+		}
+		fmt.Println(res.GetPrimeFactor())
+	}
+}
+----
+
+* gesamter Code:
+
+server.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+
+	"github.com/GeorgHs/GoServer/ServerStreaming/calculator/calculatorpb"
+
+	"google.golang.org/grpc"
+)
+
+type server struct{}
+
+func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+	fmt.Printf("Received Sum RPC: %v", req)
+	firstNumber := req.FirstNumber
+	secondNumber := req.SecondNumber
+	sum := firstNumber + secondNumber
+	res := &calculatorpb.SumResponse{
+		SumResult: sum,
+	}
+	return res, nil
+}
+
+func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
+	fmt.Printf("Received PrimeNumberDecomposition RPC: %v\n", req)
+	number := req.GetNumber()
+	divisor := int64(2)
+
+	for number > 1 {
+		if number%divisor == 0 {
+			stream.Send(&calculatorpb.PrimeNumberDecompositionResponse{
+				PrimeFactor: divisor,
+			})
+			number = number / divisor
+		} else {
+			divisor++
+			fmt.Println("Divisor has increased to %v", divisor)
+		}
+	}
+	return nil
+}
+
+func main() {
+	fmt.Println("Calculator Server")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed")
+	}
+
+	s := grpc.NewServer()
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+
+----
+
+
+client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+
+	"github.com/GeorgHs/GoServer/ServerStreaming/calculator/calculatorpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := calculatorpb.NewCalculatorServiceClient(cc)
+	//fmt.Println("Created client: %f",c)
+
+	//doUnary(c)
+	//c.Greet(context.Background(), in*greetpb.GreetRequest)
+	doServerStreaming(c)
+}
+
+func doUnary(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &calculatorpb.SumRequest{
+		FirstNumber:  5,
+		SecondNumber: 40,
+	}
+
+	res, err := c.Sum(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Sum RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.SumResult)
+}
+
+func doServerStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a PrimeDecomposition Server Streaming RPC")
+	req := &calculatorpb.PrimeNumberDecompositionRequest{
+		Number: 12,
+	}
+
+	stream, err := c.PrimeNumberDecomposition(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling PrimeDecomposition RPC: %v", err)
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("format string", err)
+		}
+		fmt.Println(res.GetPrimeFactor())
+	}
+}
+----
+
+.calculator.go
+----
+syntax = "proto3";
+
+package calculator;
+option go_package = "calculatorpb";
+
+message SumRequest {
+    int32 first_number = 1;
+    int32 second_number = 2;
+}
+
+message SumResponse {
+    int32 sum_result = 1;
+}
+
+message PrimeNumberDecompositionRequest {
+        int64 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+        int64 prime_factor = 1;
+}
+
+
+service CalculatorService {
+    rpc Sum(SumRequest) returns (SumResponse) {};
+
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+}
+----
+
+
+==== Client-Streaming
+
+.LongGreet zu greet.proto hinzufügen
+----
+message LongGreetRequest {
+    Greeting greeting = 1;
+}
+
+message LongGreetResponse {
+    string result = 1;
+}
+----
+
+. in GreetService in greet.proto hinzufügen
+----
+   rpc LongGreet(stream LongGreetRequest) returns (LongGreetResponse) {};
+----
+
+
+.in server.go LongGreet implementieren
+----
+func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
+	fmt.Printf("LongGreet function was invoked with a streaming request")
+	result := ""
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			// we have finished reading the client stream
+			return stream.SendAndClose(&greetpb.LongGreetResponse{
+				Result: result,
+			})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+
+		firstName := req.GetGreeting().GetFirstName()
+		result += "Hello " + firstName + "! "
+	}
+}
+----
+* vergiss die return nicht!
+
+
+.in Streaming Client API Client Implementation: client.go
+----
+func doClientStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a Client Streaming RPC...")
+
+	requests := []*greetpb.LongGreetRequest{
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Stephane",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "John",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Lucy",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Mark",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Piper",
+			},
+		},
+	}
+
+	stream, err := c.LongGreet(context.Background())
+	if err != nil {
+		log.Fatalf("error while calling LongGreet: %v", err)
+	}
+	// we iterate over our slice and send each message individually
+	for _, req := range requests {
+		fmt.Printf("Sending req: %v\n", req)
+		stream.Send(req)
+		time.Sleep(1000 * time.Millisecond)
+	}
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving response from LongGreet: %v", err)
+	}
+	fmt.Printf("LongGreet Response %v\n", res)
+
+}
+----
+
+* der gesamte Code sieht folgendermaßen aus:
+
+.client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/GeorgHs/GoServer/ClientStreaming/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := greetpb.NewGreetServiceClient(cc)
+	//fmt.Println("Created client: %f",c)
+
+	//doUnary(c)
+	//c.Greet(context.Background(), in*greetpb.GreetRequest)
+	doClientStreaming(c)
+}
+
+func doUnary(c greetpb.GreetServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &greetpb.GreetRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Stephane",
+			LastName:  "Maarek",
+		},
+	}
+
+	res, err := c.Greet(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Greet RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.Result)
+}
+
+func doClientStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a Client Streaming RPC...")
+
+	requests := []*greetpb.LongGreetRequest{
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Stephane",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "John",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Lucy",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Mark",
+			},
+		},
+		&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Piper",
+			},
+		},
+	}
+
+	stream, err := c.LongGreet(context.Background())
+	if err != nil {
+		log.Fatalf("error while calling LongGreet: %v", err)
+	}
+	// we iterate over our slice and send each message individually
+	for _, req := range requests {
+		fmt.Printf("Sending req: %v\n", req)
+		stream.Send(req)
+		time.Sleep(1000 * time.Millisecond)
+	}
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving response from LongGreet: %v", err)
+	}
+	fmt.Printf("LongGreet Response %v\n", res)
+
+}
+
+----
+
+server.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+	"net"
+	"strconv"
+	"time"
+
+	"github.com/GeorgHs/GoServer/ClientStreaming/greet/greetpb"
+
+	"google.golang.org/grpc"
+)
+
+type server struct{}
+
+func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+	fmt.Printf("Greet function was invoked with %v", req)
+	firstName := req.GetGreeting().GetFirstName()
+	result := "Hello" + firstName
+	res := &greetpb.GreetResponse{
+		Result: result,
+	}
+	return res, nil
+}
+
+func (*server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) error {
+	fmt.Printf("GreetManyTimes function was invoked with %v\n", req)
+	firstName := req.GetGreeting().GetFirstName()
+	for i := 0; i < 10; i++ {
+		result := "Hello" + firstName + " number" + strconv.Itoa(i)
+		res := &greetpb.GreetManyTimesResponse{
+			Result: result,
+		}
+		stream.Send(res)
+		time.Sleep(1000 * time.Millisecond)
+	}
+	return nil
+}
+
+func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
+	fmt.Printf("LongGreet function was invoked with a streaming request")
+	result := ""
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			// we have finished reading the client stream
+			return stream.SendAndClose(&greetpb.LongGreetResponse{
+				Result: result,
+			})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+
+		firstName := req.GetGreeting().GetFirstName()
+		result += "Hello " + firstName + "! "
+	}
+}
+
+func main() {
+	fmt.Println("Hello world")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed")
+	}
+
+	s := grpc.NewServer()
+	greetpb.RegisterGreetServiceServer(s, &server{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+
+----
+
+
+==== Compute Average (Client Streaming)
+
+calculator.proto
+----
+message ComputeAverageRequest {
+    int32 number = 1;
+}
+
+message ComputeAverageResponse {
+    double average = 1;
+}
+----
+
+
+* in server.go computeAverage hinzufügen
+
+.server.go
+----
+func (*server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	fmt.Printf("Received ComputeAverage RPC\n")
+
+	sum := 0
+	count := 0
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			average := float64(sum) / float64(count)
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{
+				Average: average,
+			})
+		}
+		if err != nil {
+			log.Fatalf("error while reading client stream: %v", err)
+		}
+		sum += int(req.GetNumber())
+		count++
+	}
+}
+----
+
+
+.client.go
+----
+func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a ComputeAverage Client Streaming RPC...")
+
+	stream, err := c.ComputeAverage(context.Background())
+	if err != nil {
+		log.Fatalf("Error while opening stream %v", err)
+	}
+
+	numbers := []int32{3, 5, 9, 54, 23}
+
+	for _, number := range numbers {
+		fmt.Printf("Sending number: %v", number)
+		stream.Send(&calculatorpb.ComputeAverageRequest{
+			Number: number,
+		})
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("Error while receiving resposne: %v", err)
+	}
+
+	fmt.Println("The Average is: %v", res.GetAverage())
+}
+
+----
+
+
+* im Ganzen sieht es dann so aus:
+
+.client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+
+	"github.com/GeorgHs/GoServer/ClientStreaming/calculator/calculatorpb"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	fmt.Println("Hello I am a client")
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := calculatorpb.NewCalculatorServiceClient(cc)
+	//fmt.Println("Created client: %f",c)
+
+	//doUnary(c)
+	//c.Greet(context.Background(), in*greetpb.GreetRequest)
+	//doServerStreaming(c)
+	doClientStreaming(c)
+}
+
+func doUnary(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a Unary RPC")
+	req := &calculatorpb.SumRequest{
+		FirstNumber:  5,
+		SecondNumber: 40,
+	}
+
+	res, err := c.Sum(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling Sum RPC: %v", err)
+	}
+
+	log.Printf("Response from Greet: %v", res.SumResult)
+}
+
+func doServerStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Printf("Starting to do a PrimeDecomposition Server Streaming RPC")
+	req := &calculatorpb.PrimeNumberDecompositionRequest{
+		Number: 1239456756,
+	}
+
+	stream, err := c.PrimeNumberDecomposition(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling PrimeDecomposition RPC: %v", err)
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("format string", err)
+		}
+		fmt.Println(res.GetPrimeFactor())
+	}
+}
+
+func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a ComputeAverage Client Streaming RPC...")
+
+	stream, err := c.ComputeAverage(context.Background())
+	if err != nil {
+		log.Fatalf("Error while opening stream %v", err)
+	}
+
+	numbers := []int32{3, 5, 9, 54, 23}
+
+	for _, number := range numbers {
+		fmt.Printf("Sending number: %v", number)
+		stream.Send(&calculatorpb.ComputeAverageRequest{
+			Number: number,
+		})
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("Error while receiving resposne: %v", err)
+	}
+
+	fmt.Println("The Average is: %v", res.GetAverage())
+}
+
+----
+
+.server.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+	"net"
+
+	"github.com/GeorgHs/GoServer/ClientStreaming/calculator/calculatorpb"
+
+	"google.golang.org/grpc"
+)
+
+type server struct{}
+
+func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
+	fmt.Printf("Received Sum RPC: %v", req)
+	firstNumber := req.FirstNumber
+	secondNumber := req.SecondNumber
+	sum := firstNumber + secondNumber
+	res := &calculatorpb.SumResponse{
+		SumResult: sum,
+	}
+	return res, nil
+}
+
+func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
+	fmt.Printf("Received PrimeNumberDecomposition RPC: %v\n", req)
+	number := req.GetNumber()
+	divisor := int64(2)
+
+	for number > 1 {
+		if number%divisor == 0 {
+			stream.Send(&calculatorpb.PrimeNumberDecompositionResponse{
+				PrimeFactor: divisor,
+			})
+			number = number / divisor
+		} else {
+			divisor++
+			fmt.Println("Divisor has increased to %v", divisor)
+		}
+	}
+	return nil
+}
+
+func main() {
+	fmt.Println("Calculator Server")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed")
+	}
+
+	s := grpc.NewServer()
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
+}
+
+func (*server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	fmt.Printf("Received ComputeAverage RPC\n")
+
+	sum := 0
+	count := 0
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			average := float64(sum) / float64(count)
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{
+				Average: average,
+			})
+		}
+		if err != nil {
+			log.Fatalf("error while reading client stream: %v", err)
+		}
+		sum += int(req.GetNumber())
+		count++
+	}
+}
+
+----
+
+.calculator.proto
+----
+syntax = "proto3";
+
+package calculator;
+option go_package = "calculator/calculatorpb";
+
+message SumRequest {
+    int32 first_number = 1;
+    int32 second_number = 2;
+}
+
+message SumResponse {
+    int32 sum_result = 1;
+}
+
+message PrimeNumberDecompositionRequest {
+        int64 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+        int64 prime_factor = 1;
+}
+
+message ComputeAverageRequest {
+    int32 number = 1;
+}
+
+message ComputeAverageResponse {
+    double average = 1;
+}
+
+service CalculatorService {
+    rpc Sum(SumRequest) returns (SumResponse) {};
+
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+
+    rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {};
+}
+----
+
+==== Bidirectional Streaming
+
+.in greet.proto GreetEveryoneRequest und GreetEveryoneResponse hinzufügen als auch rpc-Streaming
+----
+message GreetEveryoneRequest {
+    Greeting greeting = 1;
+}
+
+message GreetEveryoneResponse {
+    string result = 1;
+}
+
+...
+
+ //BiDi Streaming
+    rpc GreetEveryone(stream GreetEveryoneRequest) returns (stream GreetEveryoneResponse) {};
+
+----
+
+
+.server.go GreetEveryone hinzufügen
+----
+func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) error {
+	fmt.Printf("LongGreet function was invoked with a streaming request")
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+		firstName := req.GetGreeting().GetFirstName()
+		result := "Hello " + firstName + "! "
+		sendErr := stream.Send(&greetpb.GreetEveryoneResponse{
+			Result: result,
+		})
+		if sendErr != nil {
+			log.Fatalf("Error while sending data to client: %v", err)
+			return err
+		}
+	}
+}
+----
+
+.client.go 
+----
+func doBiDiStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Starting to do a BiDi Streaming RPC...")
+
+	// we create a stream by invoking the client
+	stream, err := c.GreetEveryone(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream: %v", err)
+		return
+	}
+
+	requests := []*greetpb.GreetEveryoneRequest{
+		&greetpb.GreetEveryoneRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Stephane",
+			},
+		},
+		&greetpb.GreetEveryoneRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "John",
+			},
+		},
+		&greetpb.GreetEveryoneRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Lucy",
+			},
+		},
+		&greetpb.GreetEveryoneRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Mark",
+			},
+		},
+		&greetpb.GreetEveryoneRequest{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Piper",
+			},
+		},
+	}
+
+	waitc := make(chan struct{})
+	// we send a bunch of message to the client (go routine)
+	go func() {
+		// function to send a bunch of messages
+		for _, req := range requests {
+			fmt.Printf("Sending message: %v\n", req)
+			stream.Send(req)
+			stream.Send(req)
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+	// we receive a bunch of messages from the client (go routine)
+	go func() {
+		// function to send a bunch of messages
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Error while receiving: %v", err)
+				break
+			}
+			fmt.Printf("Received: %v", res.GetResult())
+		}
+		close(waitc)
+	}()
+
+	// block until everything is done
+	<-waitc
+}
+----
+
+* nun in main-Methode den doBiDiStreaming() hinzufügen
+
+
+
+==== Bidirectional Streaming Find Maximum Number API
+
+.in calculator.proto Request/Response hinzufügen und in CalculatorService rpc hinzufügen
+----
+message FindMaximumRequest {
+    int32 number = 1;
+}
+
+message FindMaximumResponse {
+    int32 maximum = 1;
+}
+
+...
+
+rpc FindMaximum(stream FindMaximumRequest) returns (stream FindMaximumResponse) {};
+}
+
+----
+
+.server.go hinzufügen
+----
+func (*server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
+	fmt.Println("Received FindMaximum RPC")
+	maximum := int32(0)
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream %v", err)
+			return err
+		}
+		number := req.GetNumber()
+		if number > maximum {
+			maximum = number
+			sendErr := stream.Send(&calculatorpb.FindMaximumResponse{
+				Maximum: maximum,
+			})
+			if sendErr != nil {
+				log.Fatalf("Error while sending data to client: %v", err)
+			}
+		}
+	}
+}
+----
+
+
+.client.go folgende Funktion hinzufügen
+----
+func doBiDiStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a FindMaximum doBiDiStreaming Client Streaming RPC...")
+
+	stream, err := c.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf("Error while opening stream and calling FindMaximum: %v", err)
+	}
+
+	waitc := make(chan struct{})
+
+	//send go routine
+	go func() {
+		numbers := []int32{4, 7, 2, 19, 4, 6, 32}
+		for _, number := range numbers {
+			//fmt.Printf("Sending number: %v", number)
+			stream.Send(&calculatorpb.FindMaximumRequest{
+				Number: number,
+			})
+			time.Sleep(1000 * time.Millisecond)
+		}
+	}()
+
+	//receive go routing
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Problem while reading server stream: %v", err)
+				break
+			}
+			maximum := res.GetMaximum()
+			fmt.Printf("Received a new maximum of ...: %v\n", maximum)
+		}
+		close(waitc)
+	}()
+	<-waitc
+}
+
+----
+
+* doBiDiStreaming(c) hinzufügen in main()
+
+
+
+=== CRUD mit MongoDB
+
+==== What needs to be installed?
+. get MongoDB Community Server
+. mkdir in C:\data\db
+. go into mongod-path (C:\Program Files\MongoDB\Server\4.4\bin)
+.. set as 1. environment variable, 2. set dbpath: "bin/mongod --dbpath data/db"
+. download/install Robo 3T
+. Start Robo 3T -> go on Create -> go on Direct Connection, Localhost, localhost:27017
+.. click connect
+. folder structure setup/creation
+.. blog
+... blog_client
+.... client.go
+... blog_server
+.... server.go
+... blogpb
+.... blogo.proto
+
+.blog.proto
+----
+syntax = "proto3"
+
+package blog;
+
+option go_package = "blogpb";
+
+message Blog {
+    string id = 1;
+    string author_id = 2;
+    string title = 3;
+    string content = 4;
+}
+
+service BlogService {
+    
+}
+----
+
+.setting up basic blog item between main-function and Blog-Methods
+----
+var collection *mongo.Collection
+
+type server struct {
+}
+
+type blogItem struct {
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	AuthorID string             `bson:"author_id"`
+	Content  string             `bson:"content"`
+	Title    string             `bson:"title"`
+}
+
+func dataToBlogPb(data *blogItem) *blogpb.Blog {
+	return &blogpb.Blog{
+		Id:       data.ID.Hex(),
+		AuthorId: data.AuthorID,
+		Content:  data.Content,
+		Title:    data.Title,
+	}
+}
+----
+
+.install go.mongodb.org never: github.com/mongodb/mongo-go-driver/mongo
+----
+go get go.mongodb.org/mongo-driver
+----
+
+.server.go -> paste in standard procedure! (especially of main) and add all the missing imports
+----
+package main
+
+import (
+    "context"
+	"fmt"
+	"log"
+	"net"
+	"os"
+	"os/signal"
+
+	"github.com/GeorgHs/GoServer/CRUD_MongoDB/blog/blogpb"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+----
+
+.server.go main: standard procedure
+----
+func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	fmt.Println("Connecting to MongoDB")
+
+	//connect to MongoDB
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = client.Connect(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Blog Service Started")
+	collection = client.Database("mydb").Collection("blog")
+
+	lis, err := net.Listen("tcp", "0.0.0.0:50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	opts := []grpc.ServerOption{}
+
+	s := grpc.NewServer(opts...)
+	blogpb.RegisterBlogServiceServer(s, &server{})
+	go func() {
+		fmt.Println("Starting Server...")
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("failed to server: %v", err)
+		}
+	}()
+
+	// wait for control C to exit
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt)
+
+	// Block until a signal is received
+	<-ch
+	fmt.Println("Stopping the server")
+	s.Stop()
+	fmt.Println("Closing the listener")
+	lis.Close()
+	fmt.Println("Closing MongoDB Connection")
+	client.Disconnect(context.TODO())
+	fmt.Println("End of Program")
+
+}
+----
+
+
+* any wrong code:
+https://github.com/simplesteph/grpc-go-course/tree/master/blog
+
+client.go
+----
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+
+	"github.com/GeorgHs/GoServer/CRUD_MongoDB/blog/blogpb"
+	"google.golang.org/grpc"
+)
+
+func main() {
+
+	fmt.Println("Blog client")
+
+	opts := grpc.WithInsecure()
+
+	cc, err := grpc.Dial("localhost:50051", opts)
+	if err != nil {
+		log.Fatalf("could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	c := blogpb.NewBlogServiceClient(cc)
+	
+	
+	
+	
+	}
+
+----
+
+==== Mongo Driver
+
+
+
+
+
+
+==== Create each Method:
+
+1.in blog.proto create MESSAGE! 
+----
+message CreateBlogRequest {
+    Blog blog = 1;
+}
+
+message CreateBlogResponse {
+    Blog blog = 1; //will have a blog id
+}
+----
+
+2.in blog.proto in BlogService do a CreateBlog
+----
+service BlogService {
+    rpc CreateBlog (CreateBlogRequest) returns (CreateBlogResponse);
+
+----
+
+3.in server.go
+
+----
+func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
+	fmt.Println("Create blog request")
+	blog := req.GetBlog()
+
+	data := blogItem{
+		AuthorID: blog.GetAuthorId(),
+		Title:    blog.GetTitle(),
+		Content:  blog.GetContent(),
+	}
+
+	res, err := collection.InsertOne(context.Background(), data)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal error: %v", err),
+		)
+	}
+	oid, ok := res.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Cannot convert to OID"),
+		)
+	}
+
+	return &blogpb.CreateBlogResponse{
+		Blog: &blogpb.Blog{
+			Id:       oid.Hex(),
+			AuthorId: blog.GetAuthorId(),
+			Title:    blog.GetTitle(),
+			Content:  blog.GetContent(),
+		},
+	}, nil
+
+}
+----
+
+
+* this method which was just created being called in client.go
+
+4.in main-method of client.go run server-methods (as listed in blog.pb.go)
+
+----
+
+
+	// create Blog
+	fmt.Println("Create the blog")
+	blog := &blogpb.Blog{
+		AuthorId: "Stephane",
+		Title:    "My First Blog",
+		Content:  "Content of the first blog",
+	}
+	createBlogRes, err := c.CreateBlog(context.Background(), &blogpb.CreateBlogRequest{Blog: blog})
+
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
+	fmt.Printf("Blog has been created: %v", createBlogRes)
+	blogID := createBlogRes.GetBlog().GetId()
+----
+
+
+* this then goes on for
+** Read
+** Update
+** Delete
+** ListBlog

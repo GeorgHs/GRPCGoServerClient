@@ -44,7 +44,7 @@ message DeleteBlogResponse {
 }
 
 message ListBlogRequest {
-
+    
 }
 
 message ListBlogResponse {
